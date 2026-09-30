@@ -1,0 +1,56 @@
+name: Controle en publiceren
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, labeled, unlabeled]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  controle:
+    name: controle
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Afspraken rond gegevensbescherming
+        run: node tests/controle.mjs
+      - name: Beschermde bestanden
+        if: github.event_name == 'pull_request'
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+          OK_LABEL: ${{ contains(github.event.pull_request.labels.*.name, 'bewaking-ok') }}
+        run: |
+          CHANGED=$(git diff --name-only "$BASE" "$HEAD" | grep -E '^(app/bewaking\.js|app/staticwebapp\.config\.json|app/config\.js|tests/|\.github/|CLAUDE\.md)' || true)
+          if [ -n "$CHANGED" ]; then
+            echo "Deze pull request wijzigt beschermde bestanden:"
+            echo "$CHANGED"
+            if [ "$OK_LABEL" != "true" ]; then
+              echo "::error::Beschermde bestanden gewijzigd. Controleer de wijziging zelf en zet daarna het label 'bewaking-ok' op de pull request."
+              exit 1
+            fi
+          fi
+
+  publiceren:
+    needs: controle
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+          action: upload
+          app_location: app
+          skip_app_build: true
