@@ -74,7 +74,7 @@ const swa = JSON.parse(app("staticwebapp.config.json"));
 const csp = swa.globalHeaders?.["Content-Security-Policy"] || "";
 ok(/script-src 'self';/.test(csp), "CSP: scripts enkel van eigen adres");
 const connect = (csp.match(/connect-src ([^;]+)/) || [, ""])[1].trim();
-ok(connect === "'self' https://graph.microsoft.com https://login.microsoftonline.com https://*.sharepoint.com https://api.anthropic.com", "CSP: connect-src is exact de afgesproken lijst (nu: " + connect + ")");
+ok(connect === "'self' https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.sharepoint.com https://*.1drv.com https://*.livefilestore.com https://api.anthropic.com", "CSP: connect-src is exact de afgesproken lijst (nu: " + connect + ")");
 ok(!/<script>(?!\s*<\/script>)[\s\S]*?<\/script>/.test(app("index.html")) && !/\son[a-z]+\s*=\s*"/i.test(app("index.html")), "index.html bevat geen inline scripts of on…-attributen");
 ok(!/\son(click|load|error|change)\s*=\s*\\?["']/.test(appjs), "app.js zet geen inline on…-attributen (werkt niet onder de CSP)");
 
