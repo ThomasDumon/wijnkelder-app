@@ -5,8 +5,8 @@ window.WK_CONFIG = {
                               // "organisatie" = een Microsoft 365-omgeving (vul dan ook tenantId in)
   clientId: "e2f6ce4d-d891-418a-9c71-c64ab24640c1", // Toepassings-ID (client) van de app-registratie
   tenantId: "",               // enkel bij "organisatie"
-  driveId: "",                // verschijnt na "Kelder aanmaken in mijn OneDrive"
-  folderId: "",               // idem
+  driveId: "051B42333EA0F4F6",
+  folderId: "51B42333EA0F4F6!s7f079ae6c9ff4006b52c4e2c11b507e9",
   folderName: "Wijnkelder",
   internalDomains: [],        // enkel bij "organisatie": adressen die geen gastuitnodiging krijgen
   inviteGuests: false,        // enkel bij "organisatie": externe adressen als gast uitnodigen
