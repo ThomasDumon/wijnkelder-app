@@ -1,12 +1,13 @@
 
 "use strict";
 /* ================= Configuratie & modus ================= */
-const APP_VERSION="1.1.0"; // verhogen bij elke publicatie: de eerste opslag met een nieuwe versie maakt eerst een back-up
+const APP_VERSION="1.2.0"; // verhogen bij elke publicatie: de eerste opslag met een nieuwe versie maakt eerst een back-up
 const MAPS=window.WK_MAPS||{};
 const SAFE=window.WK_SAFE;
 const CFG = Object.assign({}, window.WK_CONFIG || {});
 const IN_ARTIFACT = !!window.claude;
 const HOSTED = !IN_ARTIFACT && !!CFG.clientId;
+const PERSONAL = (CFG.accountType||"persoonlijk")==="persoonlijk"; // persoonlijke Microsoft-accounts en persoonlijke OneDrive
 const YEAR = new Date().getFullYear();
 const ls = { get(k){try{return localStorage.getItem(k)}catch(e){return null}}, set(k,v){try{localStorage.setItem(k,v)}catch(e){}}, del(k){try{localStorage.removeItem(k)}catch(e){}} };
 
@@ -154,7 +155,7 @@ async function boot(){
 async function bootHosted(){
   screen(`<p class="muted"><span class="spin"></span> Wijnkelder laden…</p>`);
   if(!window.msal)await loadScript(CFG.msalUrl||"msal-browser.min.js");
-  PCA=new msal.PublicClientApplication({auth:{clientId:CFG.clientId,authority:"https://login.microsoftonline.com/"+(CFG.tenantId||"organizations"),redirectUri:location.origin+location.pathname,navigateToLoginRequestUrl:false},cache:{cacheLocation:"localStorage"}});
+  PCA=new msal.PublicClientApplication({auth:{clientId:CFG.clientId,authority:"https://login.microsoftonline.com/"+(PERSONAL?"consumers":(CFG.tenantId||"organizations")),redirectUri:location.origin+location.pathname,navigateToLoginRequestUrl:false},cache:{cacheLocation:"localStorage"}});
   const res=await PCA.handleRedirectPromise();
   ACCOUNT=res?.account||PCA.getActiveAccount()||PCA.getAllAccounts()[0];
   if(!ACCOUNT)return loginScreen();
@@ -174,7 +175,7 @@ async function bootHosted(){
 }
 function findUser(email){const e=String(email||"").toLowerCase();return (S.data.users||[]).find(u=>u.email.toLowerCase()===e||(u.alias||"").toLowerCase()===e);}
 function screen(inner){$("#root").innerHTML=`<div class="center"><div class="box">${inner}</div></div>`;}
-function loginScreen(){screen(`<div class="label">Privé wijnkelder</div><h1>Wijnkelder</h1><p class="muted">Meld je aan met je Microsoft-account. Kreeg je een uitnodiging op een Gmail-adres, gebruik dan dat adres: Microsoft stuurt je een eenmalige code.</p><p><button class="btn primary" id="login">Aanmelden met Microsoft</button></p>`);
+function loginScreen(){screen(`<div class="label">Privé wijnkelder</div><h1>Wijnkelder</h1><p class="muted">${PERSONAL?"Meld je aan met je persoonlijke Microsoft-account (Outlook, Hotmail, Live). Heb je enkel een Gmail-adres? Kies dan bij het aanmelden <b>Maak er een</b> en maak gratis een Microsoft-account aan met dat Gmail-adres.":"Meld je aan met je Microsoft-account. Kreeg je een uitnodiging op een Gmail-adres, gebruik dan dat adres: Microsoft stuurt je een eenmalige code."}</p><p><button class="btn primary" id="login">Aanmelden met Microsoft</button></p>`);
   $("#login").onclick=()=>PCA.loginRedirect({scopes:SCOPES,prompt:"select_account"});}
 function deniedScreen(msg){screen(`<div class="label">Geen toegang</div><h1>Nog even geduld</h1><p>${esc(msg)}</p><p class="muted">Vraag de beheerder van de kelder om je toe te voegen. Geef dit adres door: <code>${esc(S.me.email)}</code></p><p><button class="btn" id="lo">Afmelden</button></p>`);$("#lo").onclick=()=>PCA.logoutRedirect();}
 function setupScreen(){
@@ -577,12 +578,12 @@ function viewBeheer(){
   $("#view").innerHTML=`<div class="cards">
    <section class="panel"><h3>Je account</h3><div class="hint">${esc(S.me.email)}</div><p style="margin:0 0 10px">Rol: <b>${ROLES[S.me.role]}</b> · ${esc(ROLE_INFO[S.me.role])}</p>
     ${demo?`<label class="f"><span class="label">Demo: bekijk de app als</span><select id="asRole">${Object.entries(ROLES).map(([k,l])=>`<option value="${k}" ${S.me.role===k?"selected":""}>${l}</option>`).join("")}</select></label>`:`<button class="btn sm" id="logout">Afmelden</button>`}</section>
-   <section class="panel"><h3>Gebruikers en rechten</h3><div class="hint">${D.users.length} gebruikers · ook Gmail-adressen kunnen als gast worden uitgenodigd</div>
+   <section class="panel"><h3>Gebruikers en rechten</h3><div class="hint">${D.users.length} gebruikers · ${PERSONAL?"iedereen met een Microsoft-account, ook op een Gmail-adres":"ook Gmail-adressen kunnen als gast worden uitgenodigd"}</div>
     <div class="tbl-wrap" style="border:0"><table class="tbl"><tbody>${D.users.map((u,i)=>`<tr><td style="min-width:0;word-break:break-all">${esc(u.name||"")}${u.name?"<br>":""}<span class="muted">${esc(u.email)}</span></td><td>${can("users")?`<select data-u="${i}" aria-label="Rol">${Object.entries(ROLES).map(([k,l])=>`<option value="${k}" ${u.role===k?"selected":""}>${l}</option>`).join("")}</select>`:ROLES[u.role]}</td><td>${can("users")&&u.email!==S.me.email?`<button class="btn ghost sm danger" data-del="${i}" aria-label="Verwijderen">×</button>`:""}</td></tr>`).join("")}</tbody></table></div>
-    ${can("users")?`<form id="fu" class="grid" style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;margin-top:10px"><input id="u_email" type="email" required placeholder="naam@gmail.com of naam@dumon.com" aria-label="E-mailadres" style="border:1px solid var(--line);border-radius:var(--r);background:var(--bg);padding:8px 10px;min-width:0">
+    ${can("users")?`<form id="fu" class="grid" style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;margin-top:10px"><input id="u_email" type="email" required placeholder="naam@gmail.com of naam@outlook.com" aria-label="E-mailadres" style="border:1px solid var(--line);border-radius:var(--r);background:var(--bg);padding:8px 10px;min-width:0">
       <select id="u_role" aria-label="Rol" style="border:1px solid var(--line);border-radius:var(--r);background:var(--bg);padding:8px">${Object.entries(ROLES).map(([k,l])=>`<option value="${k}" ${k==="drinker"?"selected":""}>${l}</option>`).join("")}</select>
       <input id="u_name" placeholder="Naam (optioneel)" aria-label="Naam" style="border:1px solid var(--line);border-radius:var(--r);background:var(--bg);padding:8px 10px;min-width:0"><button class="btn primary">Uitnodigen</button></form>
-      <p class="muted" style="font-size:12px;margin:8px 0 0">${demo?"In de demo wordt enkel de lijst aangepast.":"De app stuurt een gastuitnodiging via Microsoft (voor adressen buiten je organisatie) en deelt de kelder op OneDrive met leesrecht (Lezer) of schrijfrecht (andere rollen)."}</p>`:""}
+      <p class="muted" style="font-size:12px;margin:8px 0 0">${demo?"In de demo wordt enkel de lijst aangepast.":PERSONAL?"De app deelt de kelder op je OneDrive met dit adres: leesrecht voor Lezers, schrijfrecht voor de andere rollen. Stuur de persoon daarna het adres van de app; aanmelden gebeurt met een Microsoft-account op dat e-mailadres.":"De app stuurt een gastuitnodiging via Microsoft (voor adressen buiten je organisatie) en deelt de kelder op OneDrive met leesrecht (Lezer) of schrijfrecht (andere rollen)."}</p>`:""}
     <details style="margin-top:10px;font-size:13px"><summary>Wat mag elke rol?</summary><ul style="padding-left:18px;margin:6px 0 0">${Object.entries(ROLES).map(([k,l])=>`<li><b>${l}</b>: ${esc(ROLE_INFO[k])}</li>`).join("")}</ul></details></section>
    <section class="panel"><h3>Opslag</h3>${demo?`<p style="margin:0">Demo-modus: gegevens staan niet op OneDrive.</p>`:`<p style="margin:0 0 6px">Alles staat in één bestand op OneDrive: <code>${esc(CFG.folderName||"Wijnkelder")}/cellar.json</code>, foto's in <code>fotos/</code> en elke dag een back-up in <code>backups/</code>.</p><p class="muted" style="font-size:12px;margin:0">Drive-ID <code>${esc(S.store.d)}</code><br>Map-ID <code>${esc(S.store.f)}</code></p>`}
     ${can("edit")?`<label class="f" style="margin-top:10px"><span class="label">Naam van de kelder</span><input id="cname" value="${esc(D.name)}"></label>`:""}</section>
@@ -612,10 +613,10 @@ async function inviteUser(email,role,name,btn){
   const notes=[];
   if(S.mode==="onedrive"){
     const internal=(CFG.internalDomains||[]).some(d=>email.endsWith("@"+d.toLowerCase()));
-    if(!internal&&CFG.inviteGuests!==false){try{await SAFE.inviteGuest(email,name,location.origin+location.pathname);notes.push("gastuitnodiging verstuurd");}catch(e){notes.push("gastuitnodiging niet gelukt ("+e.message+"), nodig uit via Entra");}}
+    if(!PERSONAL&&!internal&&CFG.inviteGuests!==false){try{await SAFE.inviteGuest(email,name,location.origin+location.pathname);notes.push("gastuitnodiging verstuurd");}catch(e){notes.push("gastuitnodiging niet gelukt ("+e.message+"), nodig uit via Entra");}}
     try{await S.store.share(email,role);notes.push("map gedeeld");}catch(e){notes.push("delen van de map mislukt ("+e.message+")");}
   }
-  await mutate(D=>{if(!D.users.some(u=>u.email===email))D.users.push({email,role,name,added:today()});},email+" toegevoegd"+(notes.length?": "+notes.join(", "):""));
+  await mutate(D=>{if(!D.users.some(u=>u.email===email))D.users.push({email,role,name,added:today()});},email+" toegevoegd"+(notes.length?": "+notes.join(", "):"")+(PERSONAL&&S.mode==="onedrive"?". Stuur deze persoon nu het adres van de app: "+location.origin+location.pathname:""));
   if(btn){btn.disabled=false;btn.textContent="Uitnodigen";}
 }
 async function changeRole(i,role){const u=S.data.users[i];if(!u)return;

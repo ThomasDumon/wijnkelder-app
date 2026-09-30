@@ -1,12 +1,14 @@
 // Wijnkelder — instellingen. Vul dit in na de app-registratie (zie LEESMIJ.md).
 // Laat clientId leeg om de app in demo-modus te openen (gegevens enkel in de browser).
 window.WK_CONFIG = {
-  clientId: "",            // Toepassings-ID (client) uit Microsoft Entra
-  tenantId: "",            // Map-ID (tenant) uit Microsoft Entra
-  driveId: "",             // verschijnt na "Kelder aanmaken in mijn OneDrive"
-  folderId: "",            // idem
+  accountType: "persoonlijk", // "persoonlijk" = persoonlijke Microsoft-accounts en persoonlijke OneDrive
+                              // "organisatie" = een Microsoft 365-omgeving (vul dan ook tenantId in)
+  clientId: "e2f6ce4d-d891-418a-9c71-c64ab24640c1", // Toepassings-ID (client) van de app-registratie
+  tenantId: "",               // enkel bij "organisatie"
+  driveId: "",                // verschijnt na "Kelder aanmaken in mijn OneDrive"
+  folderId: "",               // idem
   folderName: "Wijnkelder",
-  internalDomains: ["dumon.com"],  // adressen op deze domeinen krijgen geen gastuitnodiging
-  inviteGuests: true,      // Gmail- en andere externe adressen automatisch als gast uitnodigen
-  aiModel: "claude-sonnet-5-5"     // model voor "Zoek op internet"
+  internalDomains: [],        // enkel bij "organisatie": adressen die geen gastuitnodiging krijgen
+  inviteGuests: false,        // enkel bij "organisatie": externe adressen als gast uitnodigen
+  aiModel: "claude-sonnet-5-5"   // model voor "Zoek op internet"
 };
