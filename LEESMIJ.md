@@ -1,6 +1,6 @@
 # Wijnkelder — installatie, beveiliging en onderhoud
 
-Eén app die je zowel als webpagina gebruikt als op je gsm of tablet installeert. De gegevens staan op OneDrive (Microsoft 365). Aanmelden gebeurt met Microsoft; mensen met een Gmail-adres worden als gast uitgenodigd.
+Eén app die je zowel als webpagina gebruikt als op je gsm of tablet installeert. Alles is privé: de app staat op je persoonlijke Azure-abonnement, de gegevens op je persoonlijke OneDrive, en aanmelden gebeurt met een persoonlijk Microsoft-account. Vrienden met enkel een Gmail-adres maken gratis een Microsoft-account aan op dat adres.
 
 ## Hoe het in elkaar zit
 
@@ -9,8 +9,8 @@ Er zijn twee strikt gescheiden plaatsen:
 | | Programmacode | Gegevens |
 |---|---|---|
 | Wat | De app: schermen, logica, lijst van velden | Wijnen, aankopen, verbruik, notities, foto's, gebruikers |
-| Waar | Een GitHub-repository (deze map) | Je OneDrive, map `Wijnkelder` |
-| Wie kan erbij | Jij, en Claude als je dat toelaat | Enkel wie jij uitnodigt, na aanmelden bij Microsoft |
+| Waar | GitHub-repository, gepubliceerd op je persoonlijke Azure | Je persoonlijke OneDrive, map `Wijnkelder` |
+| Wie kan erbij | Iedereen kan lezen (publieke repository); wijzigen enkel via jouw goedkeuring | Enkel wie jij toevoegt, na aanmelden met een Microsoft-account |
 | Gepubliceerd via | Azure Static Web Apps (automatisch na jouw goedkeuring) | Niet van toepassing |
 
 Claude kan de app dus bijwerken zonder ooit bij de gegevens te kunnen. Zie het onderdeel **Bijwerken door Claude** verderop.
@@ -36,14 +36,14 @@ Open je `app/index.html` zonder `clientId` in `config.js`, dan start de app in d
 
 ---
 
-## Stap 1 — App registreren in Microsoft Entra (eenmalig)
+## Stap 1 — App registreren (eenmalig, in je persoonlijke Azure)
 
-1. **entra.microsoft.com** › Identiteit › Toepassingen › **App-registraties** › **Nieuwe registratie**.
-2. Naam `Wijnkelder`, accounttype **Alleen accounts in deze organisatiemap**.
-3. Omleidings-URI: platform **Single-page application (SPA)**, met het adres van de app (stap 2), bv. `https://wijnkelder.jouwdomein.be/`.
-4. Noteer **Toepassings-id (client)** en **Map-id (tenant)**.
-5. **API-machtigingen** › Microsoft Graph › **Gedelegeerd**: `User.Read`, `Files.ReadWrite.All`, en `User.Invite.All` als de app gasten mag uitnodigen.
-6. **Beheerderstoestemming verlenen**.
+1. Meld je aan op **portal.azure.com** met je **persoonlijke** Microsoft-account (niet je werkaccount).
+2. Zoek **Microsoft Entra ID** › links **App-registraties** › **+ Nieuwe registratie**.
+3. Naam `Wijnkelder`. Ondersteunde accounttypen: **Alleen persoonlijke Microsoft-accounts**.
+4. Omleidings-URI: platform **Single-page application (SPA)**, met het adres van je Static Web App en een `/` op het einde, bv. `https://blue-river-0d08cbb10.5.azurestaticapps.net/`.
+5. Klik **Registreren** en noteer de **Toepassings-id (client)**.
+6. **API-machtigingen** › *Een machtiging toevoegen* › **Microsoft Graph** › **Gedelegeerde machtigingen**: `Files.ReadWrite.All` (User.Read staat er al). Beheerderstoestemming is bij persoonlijke accounts niet nodig: elke gebruiker keurt bij de eerste aanmelding zelf goed.
 
 ## Stap 2 — Repository en publicatie
 
@@ -56,23 +56,21 @@ Open je `app/index.html` zonder `clientId` in `config.js`, dan start de app in d
    - *Do not allow bypassing the above settings*
 5. Maak in GitHub › Issues › Labels het label **`bewaking-ok`** aan.
 6. Vanaf nu publiceert elke goedgekeurde wijziging op `main` automatisch naar Azure.
-7. Zet het adres van de Static Web App als omleidings-URI in de app-registratie (stap 1.3), met afsluitende `/`.
+7. Zet het adres van de Static Web App als omleidings-URI in de app-registratie (stap 1.4), met afsluitende `/`.
 
 ## Stap 3 — Instellen en kelder aanmaken
 
-1. Vul `clientId` en `tenantId` in `app/config.js` in (via een pull request met label `bewaking-ok`, want het is een beschermd bestand).
-2. Open de app, meld je aan, klik **Kelder aanmaken in mijn OneDrive**.
-3. Zet de getoonde `driveId` en `folderId` in `app/config.js`. Vanaf dan gebruikt iedereen dezelfde kelder.
+1. Zet in `app/config.js` je `clientId` (via een pull request met het label `bewaking-ok`, want het is een beschermd bestand). `accountType` blijft `"persoonlijk"`.
+2. Open de app, meld je aan met je persoonlijke Microsoft-account en klik **Kelder aanmaken in mijn OneDrive**.
+3. Zet de getoonde `driveId` en `folderId` in `app/config.js` (weer via een pull request). Vanaf dan gebruikt iedereen dezelfde kelder.
 
-## Stap 4 — Gasten met Gmail toelaten
+## Stap 4 — Vrienden en familie toegang geven
 
-- **Entra** › External Identities › *Instellingen voor externe samenwerking*: uitnodigen door beheerders toegestaan.
-- **Entra** › External Identities › *Alle id-providers*: **Eenmalige wachtwoordcode via e-mail** aan (standaard). Of voeg Google toe als id-provider.
-- **SharePoint-beheercentrum** › Beleid › *Delen*: OneDrive minstens op **Nieuwe en bestaande gasten**.
+Iedereen heeft een **persoonlijk Microsoft-account** nodig. Wie enkel een Gmail-adres heeft, maakt er gratis een aan op account.microsoft.com (*Account maken* › *Gebruik in plaats daarvan je e-mailadres* › Gmail-adres). Voeg de persoon in de app toe met **precies dat e-mailadres**.
 
 ## Stap 5 — Gebruikers en rechten
 
-In de app › **Beheer** › *Gebruikers en rechten*. De app nodigt externe adressen uit als gast, deelt de map op OneDrive (leesrecht voor Lezers, schrijfrecht voor de rest) en zet de persoon in de gebruikerslijst.
+In de app › **Beheer** › *Gebruikers en rechten*. De app deelt de map `Wijnkelder` op je OneDrive met dat adres (leesrecht voor Lezers, schrijfrecht voor de rest) en zet de persoon in de gebruikerslijst. Stuur de persoon daarna het adres van de app.
 
 | Rol | Mag |
 |---|---|
@@ -92,8 +90,8 @@ In de app › **Beheer** › *Gebruikers en rechten*. De app nodigt externe adre
 
 Je kunt Claude vragen om de app te verbeteren of een veld toe te voegen. De afspraak: **Claude verandert de app en de HTML, mag velden toevoegen, maar verandert nooit de gegevens zelf.** Dat rust niet op vertrouwen alleen; er zijn vijf lagen.
 
-**1. Geen toegang.** Claude krijgt enkel toegang tot de GitHub-repository (bv. via Claude Code met de GitHub-koppeling op die ene repository). De gegevens staan op OneDrive, achter een Microsoft-aanmelding van een uitgenodigde gebruiker. Claude heeft daar geen account en geen sleutel.
-> Let op: koppel je in claude.ai een Microsoft 365- of OneDrive-connector, dan kan Claude met jouw rechten wel bij je bestanden. Doe dat niet in gesprekken over de wijnkelder, of gebruik die connector niet.
+**1. Geen toegang.** Claude krijgt enkel toegang tot de GitHub-repository (bv. via de GitHub-koppeling van Claude op die ene repository). De gegevens staan op je persoonlijke OneDrive, achter een Microsoft-aanmelding. Claude heeft daar geen account en geen sleutel.
+> Let op: koppel je in claude.ai een OneDrive- of Microsoft-connector met je persoonlijke account, dan kan Claude met jouw rechten wel bij je bestanden. Doe dat niet voor dit account.
 
 **2. Gegevensbewaking in de app.** Elke opslag loopt via `app/bewaking.js`. Die vergelijkt de gegevens voor en na, en weigert de opslag als:
 - een wijn, logregel, notitie of gebruiker verdwijnt die niemand verwijderde;
@@ -124,6 +122,10 @@ Vraag bijvoorbeeld: *"Voeg een veld 'Wijnmaker' toe onder Wijn"*. Claude zet é�
 Alles wat bestaande gegevens herschrijft: bulkwijzigingen, prijzen van alle wijnen bijwerken, velden hernoemen, een oude waarde omzetten. Dat is bewust. Zulke wijzigingen doe je zelf in de app (per wijn), via een CSV-import van nieuwe wijnen, of als beheerder via **Herstel JSON** (waarbij eerst een back-up gemaakt wordt).
 
 ---
+
+## Azure-abonnement na 30 dagen
+
+Je persoonlijke Azure-account begint als proefaccount van 30 dagen. Klik vóór het einde in de portal op **Upgraden naar betalen per gebruik**, anders schakelt Microsoft het abonnement uit en gaat de app offline. De Static Web App op het **Free**-plan blijft € 0 kosten. Stel voor de zekerheid een budgetmelding in: portal › **Kostenbeheer + facturering** › **Budgetten** › **Toevoegen**, bv. € 1 per maand met een mail bij 100 %.
 
 ## Opzoeken op internet (optioneel)
 
