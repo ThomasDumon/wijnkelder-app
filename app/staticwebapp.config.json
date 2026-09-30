@@ -3,7 +3,7 @@
   "rewrite": "/index.html"
  },
  "globalHeaders": {
-  "Content-Security-Policy": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.sharepoint.com https://*.1drv.com https://*.livefilestore.com https://api.anthropic.com; frame-src https://login.microsoftonline.com https://login.live.com; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none'",
+  "Content-Security-Policy": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' https://graph.microsoft.com https://login.microsoftonline.com https://login.live.com https://*.sharepoint.com https://*.1drv.com https://*.livefilestore.com https://*.microsoftpersonalcontent.com https://api.anthropic.com; frame-src https://login.microsoftonline.com https://login.live.com; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none'",
   "X-Content-Type-Options": "nosniff",
   "Referrer-Policy": "strict-origin-when-cross-origin",
   "Permissions-Policy": "geolocation=(), microphone=()"
