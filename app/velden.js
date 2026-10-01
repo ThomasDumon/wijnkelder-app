@@ -21,6 +21,7 @@
    waarden blijven in de gegevens bewaard.
    ===================================================================== */
 window.WK_EXTRA_FIELDS = [
-  { key: "format", label: "Flesformaat", type: "select", options: ["37,5 cl", "50 cl", "75 cl", "150 cl (magnum)", "300 cl (dubbele magnum)"], section: "kelder" },
+  { key: "wineRegion", label: "Wijnregio", type: "text", section: "herkomst", lookup: true, hint: "het grote wijngebied, bv. Bourgogne, Bordeaux, Rhône, Champagne, Loire" },
+  { key: "format", label: "Flesformaat", type: "select", options: ["37,5 cl", "50 cl", "75 cl", "150 cl (magnum)", "300 cl (dubbele magnum)"], section: "wijn" },
   { key: "alcohol", label: "Alcohol (%)", type: "number", section: "beschrijving", lookup: true, hint: "alcoholpercentage als getal, bv. 13.5" }
 ];
