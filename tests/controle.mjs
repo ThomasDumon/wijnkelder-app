@@ -36,6 +36,12 @@ passesG(() => S.apply(base(), d => { d.wines[0].nieuwVeld = "waarde"; }, { touch
 passesG(() => S.apply(base(), d => { d.wines = d.wines.filter(w => w.id !== w1); }, { remove: [w1] }), "Een wijn verwijderen na bevestiging");
 passesG(() => S.apply(base(), d => { d.users = d.users.filter(u => u.email !== u0); }, { remove: [u0] }), "Een gebruiker verwijderen na bevestiging");
 passesG(() => S.apply(base(), d => { d.meta = { appVersion: "9.9.9" }; }, {}), "Technische metadata bijwerken");
+// Zelf toegevoegde keuzes (refs): toevoegen mag, wijzigen of verwijderen niet
+passesG(() => S.apply(base(), d => { d.refs = [{ id: "r1", kind: "region", country: "FR", value: "Test" }]; }, {}), "Een eerste zelf toegevoegde keuze bewaren (kelder zonder refs)");
+{ const withRefs = () => { const d = base(); d.refs = [{ id: "r1", kind: "region", country: "FR", value: "Test" }]; return d; };
+  passesG(() => S.apply(withRefs(), d => { d.refs.push({ id: "r2", kind: "class", country: "FR", value: "Premier" }); }, {}), "Een keuze toevoegen aan de lijst");
+  throws(() => S.apply(withRefs(), d => { d.refs[0].value = "Anders"; }, {}), "Een bestaande keuze wijzigen");
+  throws(() => S.apply(withRefs(), d => { d.refs = []; }, {}), "De keuzelijst leegmaken"); }
 
 // De opslag vergelijkt met de laatst opgeslagen versie, ook als de app het geheugen buiten mutate() om wijzigde
 {
@@ -81,7 +87,7 @@ ok(!/\son(click|load|error|change)\s*=\s*\\?["']/.test(appjs), "app.js zet geen 
 /* 4. Extra velden zijn geldig ------------------------------------------------------------- */
 const vctx = { window: {} }; vm.createContext(vctx); vm.runInContext(app("velden.js"), vctx);
 const XF = vctx.window.WK_EXTRA_FIELDS || [];
-const CORE = ["id","created","country","region","appellation","color","domain","name","vintage","grapes","character","gastronomy","storage","drinkFrom","drinkUntil","stock","purchaseValue","webValue","location","remark","photo","lat","lng"];
+const CORE = ["id","created","country","region","appellation","color","domain","name","vintage","grapes","character","gastronomy","storage","drinkFrom","drinkUntil","stock","purchaseValue","webValue","location","remark","photo","lat","lng","classification"];
 const seen = new Set();
 for (const f of XF) {
   ok(/^[a-zA-Z][a-zA-Z0-9_]*$/.test(f.key || ""), `velden.js: ongeldige key "${f.key}"`);
