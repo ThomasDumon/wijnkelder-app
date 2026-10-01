@@ -23,7 +23,7 @@
    ===================================================================== */
 (function () {
   "use strict";
-  const COLLECTIONS = { wines: "id", moves: "id", notes: "id", users: "email" };
+  const COLLECTIONS = { wines: "id", moves: "id", notes: "id", users: "email", refs: "id" }; // refs = zelf toegevoegde keuzes (land, streek, classificatie)
   const FREE_TOP = new Set(["meta"]); // vrij aanpasbaar door de app (technische gegevens)
 
   class GuardError extends Error { constructor(m) { super(m); this.name = "GuardError"; } }
@@ -42,6 +42,7 @@
     const touch = new Set((opts.touch || []).map(String));
     const remove = new Set((opts.remove || []).map(String));
     for (const [col, key] of Object.entries(COLLECTIONS)) {
+      if (!(col in before) && !(col in after)) continue; // onderdeel bestaat (nog) niet, bv. refs in een oudere kelder
       const b = before[col] || [], a = after[col];
       if (!Array.isArray(a)) throw new GuardError(`Het onderdeel "${col}" zou verdwijnen.`);
       const am = new Map(a.map(r => [String(r && r[key]), r]));
